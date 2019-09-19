@@ -1,0 +1,66 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pool:
+  vmImage: 'windows-latest'
+steps:
+  - script: echo hello from Windows with a change in the line
+  - script: md sampledir
+  - script: echo "Verizo@1" >> c:\cred.txt
+  - script: |
+        dir /od 
+        dir
+        az login -u "munisekhar.reddy@gmail.com" -p "Verizon@1"
+        az account list-locations
+        #az ad sp list --show-mine --query '[].{"id":"appId", "tenant":"appOwnerTenantId"}'
+        #az login --tenant "59b2865a-7fb8-4ccb-ab68-72cbca88fc48"
+        #az login -u "munisekhar.reddy@gmail.com" -p "Verizon@1"
+        az resource list
+        
+ # - pwsh: |
+ #       $User = "munisekhar.reddy@gmail.com"
+ #       $PWord = ConvertTo-SecureString -String "Verizon@1" -AsPlainText -Force
+ #       $tenant = ""
+ #       $subscription = "<subscription id>"
+ #       $Credential = New-Object -TypeName "System.Management.Automation.PSCredential" -ArgumentList $User,$PWord
+ #       Connect-AzAccount -Credential $Credential -Tenant $tenant -Subscription $subscription
+ # - pwsh: |
+ #      Import-Module AzureRM
+ #      $passwd = ConvertTo-SecureString "Verizon@1" -AsPlainText -Force
+ #      Connect-AzRmAccount -ServicePrincipal -Credential $pscredential -TenantId "59b2865a-7fb8-4ccb-ab68-72cbca88fc48"
+       #$Creds = Get-Credential
+ #      Write-Output $passwd
+ #      Write-Output "End of the program"
+       
+  #- script: |
+  #       az login -u "munisekhar.reddy@gmail.com" -p "Verizon@1"
+  #       az group create --name myResourceGroup --location eastus
+       
+ #OLD CODE 
+ # - pwsh: |
+ #       Write-Output "test output"
+        #$userId = "munisekhar.reddy@gmail.com"
+        #$password = get-content -Path "c:\cred.txt"
+        #Write-Output  $password
+        #Install-Module AzureRM
+        #$password = get-content -Path "c:\cred.txt" | ConvertTo-SecureString -asPlainText -Force
+        #Set the powershell credential object
+        #$cred = New-Object -TypeName System.Management.Automation.PSCredential($userId ,$password)
+ 
+ #       $passwd = ConvertTo-SecureString "Verizon@1" -AsPlainText -Force
+  #      $pscredential = New-Object System.Management.Automation.PSCredential('service principal name/id', $passwd)
+  #      Connect-AzAccount -ServicePrincipal -Credential $pscredential -TenantId "59b2865a-7fb8-4ccb-ab68-72cbca88fc48"
+  #      az resource list
+        #log On To Azure Account
+        #Login-AzureRmAccount -Credential $cred -TenantId "59b2865a-7fb8-4ccb-ab68-72cbca88fc48"
+        
+  #  $AzCred = Get-Creden tial -UserName "munisekhar.reddy@gmail.com"
+  #- script: Set-Variabl e -Name "AzCred" -Value "Verizon@1"
+  #- script: az login -u munisekhar.reddy@gmail.com -p Verizon@1
+  #- script: az resource list
+
