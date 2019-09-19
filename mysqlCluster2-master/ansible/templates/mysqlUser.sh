@@ -1,0 +1,12 @@
+#!/bin/bash
+mysql <<EOFMYSQL
+use mysql;
+SET sql_log_bin = OFF;
+CREATE USER 'inno_cluster'@'%' IDENTIFIED BY 'passw0rd';
+GRANT SELECT, RELOAD, SHUTDOWN, PROCESS, FILE, SUPER, REPLICATION SLAVE, REPLICATION CLIENT, CREATE USER ON *.* TO 'inno_cluster'@'%' WITH GRANT OPTION;
+GRANT INSERT, UPDATE, DELETE ON *.* TO 'inno_cluster'@'%' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON *.* TO 'inno_cluster'@'%' WITH GRANT OPTION;
+SET sql_log_bin = ON;
+
+EOFMYSQL
+

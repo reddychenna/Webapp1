@@ -1,0 +1,12 @@
+---  
+  - name: restart mysql
+    become: yes
+    service: name=mysql
+             enabled=yes
+             state=restarted
+
+  - name: myhandler1
+    become: yes
+    debug:
+      msg: "This is a debug message"
+

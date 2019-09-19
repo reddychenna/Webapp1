@@ -1,0 +1,3 @@
+dba.verbose=2
+dba.configureInstance('inno_cluster:passw0rd@ip-172-31-18-251:3306', {'restart': true, 'interactive': false})
+

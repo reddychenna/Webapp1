@@ -1,0 +1,19 @@
+# Piple line to Azure TF Ad
+
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- script: terraform init
+  displayName: 'Terraform Init Step' 
+- script: terraform plan  -input=false
+  displayName: 'Terraform Plan Step'   
+- script: terraform apply  -auto-approve
+  displayName: 'Terraform Apply Step'  
+- script: |
+    echo End of Terraform pipeline script
+    echo End of the steps for this job
+  displayName: 'Muni !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'

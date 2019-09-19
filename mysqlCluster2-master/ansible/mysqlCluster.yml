@@ -1,0 +1,326 @@
+---
+- hosts: "{{mysql_node_host_name1}} {{mysql_node_host_name2}} {{mysql_node_host_name3}}"
+  become: yes
+  vars_files:
+    - vars/main.yml
+  vars: 
+    mysql_node_host_name1: mysql1
+  tasks:
+  - name: Install the iptable package
+    become: yes
+    package:
+      name: iptables
+      state: latest
+  - name: Add 3306 port
+    become: yes
+    iptables:
+       chain: INPUT
+       protocol: tcp
+       destination_port: 3306
+
+  - name: Add 33061 port
+    become: yes
+    iptables:
+       chain: INPUT
+       protocol: tcp
+       destination_port: 33061
+
+  - name: Add 13306 port
+    become: yes
+    iptables:
+       chain: INPUT
+       protocol: tcp
+       destination_port: 13306
+
+  - name: save ip tables
+    become: yes
+    command: iptables-save
+
+  - name: export front end
+    become: yes
+    shell: export DEBIAN_FRONTEND=noninteractive
+
+  - name: Install python-mysql libraries
+    become: yes
+    apt: name=python-mysqldb update_cache=yes cache_valid_time=3600 state=present
+
+
+  - name: Download mysql cluster pacakges with check md5
+    get_url:
+      url: https://dev.mysql.com/get/{{mysql_package_name}}
+      dest: /home/ubuntu/{{mysql_package_name}}
+
+  - name:  Set mysql root password
+    become: yes
+    debconf: name='mysql-community-server' question='mysql-community-server/root-pass' value='{{mysql_password | quote}}' vtype='password'
+
+  - name:  Confirm mysql root password
+    become: yes
+    debconf: name='mysql-community-server' question='mysql-community-server/re-root-pass' value='{{mysql_password | quote}}' vtype='password'
+
+  - name: Select Product
+    become: yes
+    debconf:
+      name: mysql-apt-config
+      question: mysql-apt-config/select-product
+      value: Ok
+      vtype: select
+
+  - name: Select Auth
+    become: yes
+    debconf:
+      name: mysql-community-server
+      question: mysql-server/default-auth-override
+      value: Use Strong Password Encryption (RECOMMENDED)
+      vtype: select
+
+  - name: dmr warning
+    become: yes
+    debconf:
+      name: mysql-community-server
+      question: mysql-community-server/data-dir
+      value: Ok
+      vtype: note
+
+  - name: Unpack the cluster packages
+    become: yes
+    apt:
+      deb: '{{mysql_package_name}}'
+
+
+
+  - name: Update system
+    become: yes
+    command: apt update
+
+
+  - name: Install mysql-server
+    become: yes
+    apt: name=mysql-server update_cache=yes cache_valid_time=3600 state=present
+
+
+  - name: Install mysql-shell
+    become: yes
+    apt: name=mysql-shell update_cache=yes cache_valid_time=3600 state=present
+
+
+  - name: Install mysql-router
+    become: yes
+    apt: name=mysql-router update_cache=yes cache_valid_time=3600 state=present
+
+#Installation is completed.
+
+  - name: Install mysql clinet for MySQL client  libraries
+    become: yes
+    apt: name=libmysqlclient-dev update_cache=yes cache_valid_time=3600 state=present
+
+  - name: Install python pip
+    become: yes
+    apt: name=python-pip update_cache=yes cache_valid_time=3600 state=present
+
+
+  - name: Update system
+    become: yes
+    command: apt update
+
+#insert user id and password in my.cnf file 
+  - name: insert mysql tag
+    become: yes
+    lineinfile:
+      destfile: /etc/mysql/my.cnf
+      line: '[mysql]'
+      insertbefore: EOF
+
+  - name: insert mysql user
+    become: yes
+    lineinfile:
+      destfile: /etc/mysql/my.cnf
+      line: 'user=root'
+      insertbefore: EOF
+
+  - name:  insert mysql password
+    become: yes
+    lineinfile:
+      destfile: /etc/mysql/my.cnf
+      line: 'password=passw0rd'
+      insertbefore: EOF
+
+  - name: insert mysqld tag
+    become: yes
+    lineinfile:
+      destfile: /etc/mysql/my.cnf
+      line: '[mysqld]'
+      insertbefore: EOF
+
+  - name: insert mysqld timeout
+    become: yes
+    lineinfile:
+      destfile: /etc/mysql/my.cnf
+      line: 'connect_timeout=520'
+      insertbefore: EOF
+
+#Restrict the shell script only to update the root user.  
+  - name: Copy  mysql Script to alter the user
+    become: yes
+    template: src=mysqlScript.sh dest=/home/ubuntu/mysqlScript.sh  owner=root mode=0777
+
+  - name: execute mysql script to alter the plugin module 
+    become: yes
+    shell: /home/ubuntu/mysqlScript.sh  >> log.txt
+
+#This need to be executed differently for different instnaces becuase of 
+#list of addresses to be whitelisted can be variablized.
+#Try making GTID_MODE as ONLINE .. This may work.
+
+  - name: Append to /etc/mysql/my.cnf
+    become: yes
+    blockinfile:
+      path: /etc/mysql/my.cnf
+      insertafter: EOF
+      block: |
+          [mysqld]
+          pid-file        = /var/run/mysqld/mysqld.pid
+          socket          = /var/run/mysqld/mysqld.sock
+          datadir         = /var/lib/mysql
+          log-error       = /var/log/mysql/error.log
+          plugin-load = group_replication.so
+          group_replication_ip_whitelist= "172.31.43.58,172.31.17.17,172.31.18.251"
+          default_authentication_plugin= mysql_native_password
+          # General settings - ensure the binary log is enabled, disable all non-transactional storage engines except CSV (used for logs), etc.
+          port                              = 3306
+          log_bin
+          disabled_storage_engines          = MyISAM,BLACKHOLE,FEDERATED,ARCHIVE
+          ssl
+          auto_increment_increment          = 7
+          auto_increment_offset             = 1
+          # Binary Log and Replication
+          binlog_format                     = ROW
+          binlog_rows_query_log_events      = ON
+          gtid_mode                         = ON
+          enforce_gtid_consistency          = ON
+          log_slave_updates                 = ON
+          master_info_repository            = TABLE
+          relay_log_info_repository         = TABLE
+          relay_log_recovery                = ON
+          transaction_write_set_extraction  = XXHASH64
+          binlog_checksum                   = NONE
+          # Group Replication
+          group_replication                 = FORCE_PLUS_PERMANENT
+          group_replication_start_on_boot   = OFF
+
+  - name: Copy mysqld config file
+    become: yes
+    template: src=myconf1.cnf dest=/etc/mysql/mysql.conf.d/mysqld.cnf  owner=root mode=0600
+
+- hosts: mysql1
+  tasks:
+  - name: insert server id for instance1
+    become: yes
+    lineinfile:
+      destfile: /etc/mysql/my.cnf
+      line: '{{ item }}'
+      insertbefore: EOF
+    with_items:
+    - 'server_id=201801'
+    - 'group_replication_local_address   = 172.31.43.58:13306'
+    - 'group_replication_group_seeds     = 172.31.17.17:13306,172.31.18.251:13306'
+    notify: restart mysql
+  handlers:
+    - include: handlers/main.yml
+
+- hosts: mysql2
+  tasks:
+  - name: insert server id for instnace2
+    become: yes
+    lineinfile:
+      destfile: /etc/mysql/my.cnf
+      line: '{{ item }}'
+      insertbefore: EOF
+    with_items:
+    - 'server_id=201802'
+    - 'group_replication_local_address   = 172.31.17.17:13306'
+    - 'group_replication_group_seeds     = 172.31.43.58:13306,172.31.18.251:13306'
+    notify: restart mysql
+  handlers:
+    - include: handlers/main.yml
+
+- hosts: mysql3
+  tasks:
+  - name: insert server id for instnace3
+    become: yes
+    lineinfile:
+      destfile: /etc/mysql/my.cnf
+      line: '{{ item }}'
+      insertbefore: EOF
+    with_items:
+    - 'server_id=201803'
+    - 'group_replication_local_address   = 172.31.18.251:13306'
+    - 'group_replication_group_seeds     = 172.31.17.17:13306,172.31.43.58:13306'
+    notify: restart mysql
+  handlers:
+    - include: handlers/main.yml
+#- hosts: mysql1 mysql2 mysql3
+#  become: yes
+#  tasks:
+#  - name: restart mysql
+#    service: name=mysql
+#             enabled=yes
+#             state=restarted
+
+- hosts: mysql1 mysql2 mysql3
+  tasks:
+  - name: Copy mysql credentail config file
+    become: yes
+    template: src=my.cnf dest=/home/ubuntu/.my.cnf  owner=root mode=0600
+#Run mysql command to bring GTID_MODE to appropriate value.  
+#Run mysql commands to create cluster user iwth appropriate priveleges.
+  - name: Copy  mysql Script for Global variable setting
+    become: yes
+    template: src=mysqlUser.sh dest=/home/ubuntu/mysqlUser.sh  owner=root mode=0777
+
+  - name: execute mysql script to set Global variable setting. 
+    become: yes
+    shell: /home/ubuntu/mysqlUser.sh  >> log9.txt
+    register: scriptoutput
+  - debug: msg="{{scriptoutput.stdout}}"
+  - debug: msg="{{scriptoutput.stderr}}"
+#copy the configureInstance() for each  node separately .   
+- hosts: mysql1
+  tasks:
+  - name: Copy mysqlShellJsCommand1 for configuring the cluster
+    become: yes
+    template: src=mysqlJsCommands1 dest=/home/ubuntu/mysqlJsCommands1  owner=root mode=0777
+
+  - name: Configure Cluster1
+    become: yes
+    shell: mysqlsh  -f mysqlJsCommands1
+
+- hosts: mysql2
+  tasks:
+  - name: Copy mysqlShellJsCommand2 for configuring the cluster
+    become: yes
+    template: src=mysqlJsCommands2 dest=/home/ubuntu/mysqlJsCommands2  owner=root mode=0777
+
+  - name: Configure Cluster2
+    become: yes
+    shell: mysqlsh  -f mysqlJsCommands2
+
+- hosts: mysql3
+  tasks:
+  - name: Copy mysqlShellJsCommand3 for configuring the cluster
+    become: yes
+    template: src=mysqlJsCommands3 dest=/home/ubuntu/mysqlJsCommands3  owner=root mode=0777
+
+  - name: Configure Cluster3
+    become: yes
+    shell: mysqlsh  -f mysqlJsCommands3
+
+- hosts: mysql1
+  tasks:
+  - name: Copy mysqlShellJsCommandsCommon for configuring the cluster
+    become: yes
+    template: src=mysqlJsCommandsCommon dest=/home/ubuntu/mysqlJsCommandsCommon  owner=root mode=0777
+
+  - name: Configure Cluster Common
+    become: yes
+    shell: mysqlsh  -f mysqlJsCommandsCommon

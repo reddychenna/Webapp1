@@ -1,0 +1,21 @@
+mysql_node_host_name: mysql1
+mysql_domain_prefix: ip-172-31-24-214
+mysql_domain: ip-172-31-24-214.us-east-2.compute.internal
+mysql_password: passw0rd
+mysql_version:  Ok
+mysql_auth: Use Strong Password Encryption (RECOMMENDED)
+mysql_package_name: mysql-apt-config_0.8.10-1_all.deb
+mysql_checksum: 5b36dd754e7752162f890206fae50931
+mysql_admin_account_userid: cadmin1 
+mysql_admin_account_password: passw0rd
+mysql_login_userid: root
+mysql_login_password: passw0rd
+mysql_node_host_name1: mysql1
+mysql_domain_prefix1: ip-172-31-24-214
+mysql_domain1: ip-172-31-24-214.us-east-2.compute.internal
+mysql_node_host_name2: mysql2
+mysql_domain_prefix2: ip-172-31-36-167
+mysql_domain2: ip-172-31-36-167.us-east-2.compute.internal
+mysql_node_host_name3: mysql3
+mysql_domain_prefix3: ip-172-31-32-132
+mysql_domain3: ip-172-31-32-132.us-east-2.compute.internal

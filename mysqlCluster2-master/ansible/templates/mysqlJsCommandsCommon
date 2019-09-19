@@ -1,0 +1,12 @@
+dba.verbose=2
+shell.connect('inno_cluster:passw0rd@ip-172-31-43-58:3306')
+var cluster = dba.createCluster('testCluster')
+var cluster = dba.getCluster('testCluster')
+cluster.status()
+
+cluster.addInstance('inno_cluster:passw0rd@ip-172-31-17-17:3306')
+
+
+cluster.addInstance('inno_cluster:passw0rd@ip-172-31-18-251:3306')
+
+cluster.status()

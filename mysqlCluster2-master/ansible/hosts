@@ -1,0 +1,8 @@
+[mylocal]
+127.0.0.1  ansible_connection=local  ansible_sudo_pass=passw0rd
+[mysql1]
+172.31.43.58  ansible_user=ubuntu
+[mysql2]
+172.31.17.17    ansible_user=ubuntu
+[mysql3]
+172.31.18.251    ansible_user=ubuntu

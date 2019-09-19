@@ -1,0 +1,5 @@
+#!/bin/bash
+apt install python -y
+apt install python-apt -y
+apt update  -y
+echo ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDy1uToQ4gIVNAyL4OENIvhbR8KfmRuU81diFbN7QXOrcxqmmfVcc1Uyc9KMNdwnkV5LcoQPJUpsFUZAcDK7H7KU1XtZvw20zClTOZHUBLWhUzFOOJzLNI+D5flUHkm4Bb1FOX4M40461OO8r0WlpffmKHMTNGrXfvLS3SxdXduszNmwHrNSzJ3FiIKn51iPpVT8Mmrz6YDDso8KbU1x2nGaeq/sb51gju4o4Lkb+n3wj+yDp7S/psi246tuhZPxhn4JXIPGfSx99xORVPcuz4tK5JnA9I/lzDygf/jzpJBm3MLSKd6JeMPdGTGxpTomwFDr5tJKq8uqtNG/iBZ10LV muni1@muni1-ThinkPad-T430 >> /home/ubuntu/.ssh/authorized_keys
